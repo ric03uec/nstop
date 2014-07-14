@@ -1,10 +1,8 @@
 package arguments
 import (
-	"fmt"
 	"log"
 )
 
-func Initialize(arguments []string) {
-	log.Printf("App arguments %s\n", arguments)
-	fmt.Println(arguments)
+func Initialize(fileName string) {
+	log.Printf("Reading configuration from file : \n", fileName)
 }

@@ -1,107 +1,34 @@
 package main
 import (
-    "os"
-    //"time"
-    //"os/exec"
-    //"encoding/json"
-    "github.com/codegangsta/cli"
-    "github.com/ric03uec/nstop/arguments"
+	"os"
+	"log"
+	"github.com/codegangsta/cli"
+	"github.com/ric03uec/nstop/arguments"
 )
 
 func bootApplication(c *cli.Context) {
-	// call arguments with the contenxt
-	// supervisor HAS to start from the data returned by arguments
-	// logger/watcher MAY start depending upon data returned by arguments
-	arguments.Initialize(c.Args())
+	fileName := ".nstopcfg"
+	if c.IsSet("file"){
+		fileName = c.GlobalString("file")
+	}
+	log.Printf("Starting supervisor using config file : %s ", fileName)
+	arguments.Initialize(fileName)
 }
 
 func main() {
 	// use go-flags or getopt package for parsing flags
 	// use channels
+	// DONT pass arrays, pass slices
 	app := cli.NewApp()
 	app.Name = "!stop"
 	app.Usage = "supervisor for docker applications"
 	app.Action = bootApplication
+	app.Version = "0.0.1"
+
+	appFlags := []cli.Flag {
+		cli.StringFlag{Name: "file, f", Usage: "configuration file name"},
+	}
+	app.Flags = appFlags
 	app.Run(os.Args)
-
-	/*
-    myMap := make([]string, 3)
-    myMap = append(myMap, "h")
-    myMap = append(myMap, "e")
-    myMap = append(myMap, "l")
-    fmt.Println(myMap)
-
-    c := make([]string, len(myMap))
-    copy(c, myMap)
-    fmt.Println("E:", c)
-
-    date := exec.Command("date")
-    dateOut, _ := date.Output()
-    fmt.Println(string(dateOut))
-
-    bleh, _ := json.Marshal(true)
-    fmt.Println(string(bleh))
-
-    a := 5
-    p := &a
-    fmt.Println("pointer: ", &a)
-    fmt.Println("pointer: ", *p)
-
-    cn := container{}
-    cn.id = "asdfsfdf"
-
-    fmt.Println(cn.getId())
-    cp := &cn
-    fmt.Println(cp.getId())
-
-    message := make (chan string, 2)
-    go func(){
-      message <- "hello from other end "
-      message <- "bye bye from other end "
-    }()
-
-    msg := <-message
-    msg1 := <-message
-    fmt.Println(msg)
-    fmt.Println(msg1)
-
-    fmt.Printf("Hello worldddd")
-
-    jobs := make(chan int, 100)
-    results := make(chan int, 100)
-
-    for w := 1; w <= 3; w++ {
-      go worker(w, jobs, results)
-    }
-    for j := 1; j <= 9; j++{
-      jobs <- j
-    }
-    close(jobs)
-
-    for a := 1; a <=9; a++ {
-      <-results
-    }
-    */
 }
 
-/*
-func worker (id int, jobs <-chan int, results chan<- int){
-  for j := range jobs {
-    fmt.Println("Worker:", id, " processing job: ", j)
-    time.Sleep(time.Second)
-    results <- j*2
-  }
-}
-
-type container struct {
-  id string
-}
-
-func (c container) getId() string {
-  return c.id
-}
-
-func (c *container) getIdPtr() string {
-  return c.id
-}
-*/
