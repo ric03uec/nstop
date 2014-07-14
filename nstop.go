@@ -1,18 +1,32 @@
 package main
 import (
     "fmt"
-    "time"
     "os"
-    "os/exec"
-    "encoding/json"
+    //"time"
+    //"os/exec"
+    //"encoding/json"
     "github.com/codegangsta/cli"
+    "github.com/ric03uec/nstop/arguments"
 )
 
-func main() {
-    // use go-flags or getopt package for parsing flags
-    // use channels
-    cli.NewApp().Run(os.Args)
+func bootApplication(c *cli.Context) {
+	// call arguments with the contenxt
+	// supervisor HAS to start from the data returned by arguments
+	// logger/watcher MAY start depending upon data returned by arguments
+	fmt.Println("=========================")
+	arguments.Initialize(c.Args())
+}
 
+func main() {
+	// use go-flags or getopt package for parsing flags
+	// use channels
+	app := cli.NewApp()
+	app.Name = "!stop"
+	app.Usage = "supervisor for docker applications"
+	app.Action = bootApplication
+	app.Run(os.Args)
+
+	/*
     myMap := make([]string, 3)
     myMap = append(myMap, "h")
     myMap = append(myMap, "e")
@@ -69,8 +83,10 @@ func main() {
     for a := 1; a <=9; a++ {
       <-results
     }
+    */
 }
 
+/*
 func worker (id int, jobs <-chan int, results chan<- int){
   for j := range jobs {
     fmt.Println("Worker:", id, " processing job: ", j)
@@ -90,3 +106,4 @@ func (c container) getId() string {
 func (c *container) getIdPtr() string {
   return c.id
 }
+*/
