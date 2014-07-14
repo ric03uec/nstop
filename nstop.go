@@ -2,12 +2,16 @@ package main
 import (
     "fmt"
     "time"
+    "os"
     "os/exec"
     "encoding/json"
-    "github.com/ric03uec/nstop/cli"
+    "github.com/codegangsta/cli"
 )
 
 func main() {
+    // use go-flags or getopt package for parsing flags
+    // use channels
+    cli.NewApp().Run(os.Args)
 
     myMap := make([]string, 3)
     myMap = append(myMap, "h")
@@ -65,8 +69,6 @@ func main() {
     for a := 1; a <=9; a++ {
       <-results
     }
-
-    cli.PrintSth()
 }
 
 func worker (id int, jobs <-chan int, results chan<- int){
