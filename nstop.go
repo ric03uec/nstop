@@ -1,6 +1,5 @@
 package main
 import (
-    "fmt"
     "os"
     //"time"
     //"os/exec"
@@ -13,7 +12,6 @@ func bootApplication(c *cli.Context) {
 	// call arguments with the contenxt
 	// supervisor HAS to start from the data returned by arguments
 	// logger/watcher MAY start depending upon data returned by arguments
-	fmt.Println("=========================")
 	arguments.Initialize(c.Args())
 }
 

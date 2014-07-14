@@ -1,9 +1,10 @@
 package arguments
 import (
 	"fmt"
+	"log"
 )
 
 func Initialize(arguments []string) {
-	fmt.Println("inside arguments")
+	log.Printf("App arguments %s\n", arguments)
 	fmt.Println(arguments)
 }
