@@ -6,9 +6,11 @@ import (
 	"github.com/ric03uec/nstop/arguments"
 )
 
+var NSTOP_CONFIG_FILENAME = ".nstopcfg.json"
+
 func bootApplication(c *cli.Context) {
 	log.Printf("Booting application")
-	fileName := "./.nstopcfg.json"
+	fileName := NSTOP_CONFIG_FILENAME
 	if c.IsSet("file"){
 		fileName = c.GlobalString("file")
 	}

@@ -1,6 +1,7 @@
 package arguments
 import (
 	"fmt"
+	"os"
 	"log"
 	"io/ioutil"
 	"encoding/json"
@@ -35,11 +36,16 @@ type Config struct {
 	parsedConfig []ModuleConfig
 }
 
-func NewConfig(fileName string) *Config {
-	config := new(Config)
-	config.path = fileName
-	config.parsedConfig = []ModuleConfig{}
-	return config
+func NewConfig(fileName string) (config *Config, err error) {
+	newConfig := new(Config)
+	dir,_ := os.Getwd()
+	newConfig.path = fmt.Sprintf("%s/%s", dir, fileName)
+	newConfig.parsedConfig, err = LoadConfig(newConfig.path)
+	if err != nil {
+		return nil, err
+	} else {
+		return newConfig, nil
+	}
 }
 
 func IsValidModule(moduleName string) bool {
@@ -61,11 +67,13 @@ func (config Config) ModuleConfig(moduleName string) *ModuleConfig {
 	return nil
 }
 
-func (config Config) FromFile() []ModuleConfig {
-	content, err := ioutil.ReadFile(config.path)
-	if err!=nil{
-		fmt.Printf("Error", err)
+func LoadConfig(filePath string) (moduleConfig []ModuleConfig, err error) {
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil{
+		fmt.Printf("Error while reading file: %v\n", err)
+		return nil, err
 	}
+	modulesConfigSlice := []ModuleConfig{}
 
 	var parsedJson map[string]interface{}
 	json.Unmarshal([]byte(content), &parsedJson)
@@ -78,9 +86,9 @@ func (config Config) FromFile() []ModuleConfig {
 				configEntry := NewConfigEntry(moduleKey, moduleVal)
 				moduleConfig.values = append(moduleConfig.values, *configEntry)
 			}
-			config.parsedConfig = append(config.parsedConfig , *moduleConfig)
+			modulesConfigSlice = append(modulesConfigSlice, *moduleConfig)
 		}
 	}
-	log.Printf("Parsed config from file %s\n", config.parsedConfig)
-	return config.parsedConfig
+	log.Printf("Parsed config from file %s\n", modulesConfigSlice)
+	return modulesConfigSlice, nil
 }
