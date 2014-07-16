@@ -4,6 +4,9 @@
 *.so
 *.swp
 *.swo
+*.go~
+*.gz~
+
 
 # Folders
 _obj

@@ -1,0 +1,17 @@
+{
+  "supervisor":{
+    "exec" : "node app.js",
+    "retryCount": 5,
+    "numprocs" : 3
+  },
+  "logger":{
+    "enabled" : "true",
+    "dirname" : "."
+  },
+  "watcher":{
+    "enabled" : false
+  },
+  "invalidModule" : {
+    "enabled" : true
+  }
+}

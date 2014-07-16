@@ -7,11 +7,11 @@ import (
 )
 
 func bootApplication(c *cli.Context) {
-	fileName := ".nstopcfg"
+	log.Printf("Booting application")
+	fileName := "./.nstopcfg.json"
 	if c.IsSet("file"){
 		fileName = c.GlobalString("file")
 	}
-	log.Printf("Starting supervisor using config file : %s ", fileName)
 	arguments.Initialize(fileName)
 }
 
