@@ -38,10 +38,8 @@ func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err er
 			break
 		}
 	}
-	fmt.Printf("%s\n",isValid)
 	return isValid, validationError
 }
-
 
 func Boot(config *arguments.Config)(started bool, err error) {
 	log.Printf("%v", config)
@@ -51,15 +49,10 @@ func Boot(config *arguments.Config)(started bool, err error) {
 		log.Printf("Invalid configuation in config file")
 		return false, err
 	}
-	//exec command
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
 	proc.exec()
 	log.Printf(fmt.Sprintf("%v", proc))
 
 	return true, nil
-}
-
-func PrintSth() {
-	fmt.Printf("inside supervisor \n")
 }

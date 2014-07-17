@@ -1,8 +1,10 @@
 package supervisor
 
 import (
-	"fmt"
+	//"fmt"
+	//"bytes"
 	"log"
+	"os"
 	"strings"
 	"os/exec"
 )
@@ -29,18 +31,21 @@ func NewProc(command string) *Proc {
 
 
 func (proc *Proc) exec() (safeExit bool, err error){
-	fmt.Printf("proc running command %s", proc.command)
-	// run exec.CombinedOutput
-
-	fmt.Sprintf("%s",strings.Split(proc.command, " "))
-	cmd := exec.Command(proc.command)
+	log.Printf("supervisor proc running command: %s\n", proc.command)
+	commandParts := strings.Fields(proc.command)
+	commandString := commandParts[0]
+	commandArgs := commandParts[1:len(commandParts)]
+	cmd := exec.Command(commandString, commandArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Printf("--------- Starting command execution ----------- \n")
 	cmdErr := cmd.Start()
 	if cmdErr != nil {
 		log.Fatal(cmdErr)
 	}
-	log.Printf("waiting for cmd")
 	err = cmd.Wait()
-	log.Printf("cmd finished")
+	log.Printf("--------- Command exited ----------- \n")
+	//log.Printf("cmd finished %s", out.String())
 
 	return true, nil
 }
