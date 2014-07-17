@@ -1,22 +1,16 @@
 package arguments
 import (
 	"fmt"
+	"errors"
 	"os"
 	"log"
 	"io/ioutil"
 	"encoding/json"
 )
 
-type ConfigEntry struct {
-	key string
-	value interface{}
-}
-
-func NewConfigEntry(key string, value interface{}) *ConfigEntry {
-	configEntry := new(ConfigEntry)
-	configEntry.key = key
-	configEntry.value = value
-	return configEntry
+type Config struct {
+	path string
+	parsedConfig []ModuleConfig
 }
 
 type ModuleConfig struct {
@@ -24,16 +18,23 @@ type ModuleConfig struct {
 	values []ConfigEntry
 }
 
+type ConfigEntry struct {
+	Key string
+	Value interface{}
+}
+
+func NewConfigEntry(key string, value interface{}) *ConfigEntry {
+	configEntry := new(ConfigEntry)
+	configEntry.Key = key
+	configEntry.Value = value
+	return configEntry
+}
+
 func NewModuleConfig(moduleName string) *ModuleConfig {
 	moduleConfig := new(ModuleConfig)
 	moduleConfig.moduleName = moduleName
 	moduleConfig.values = []ConfigEntry{}
 	return moduleConfig
-}
-
-type Config struct {
-	path string
-	parsedConfig []ModuleConfig
 }
 
 func NewConfig(fileName string) (config *Config, err error) {
@@ -48,23 +49,13 @@ func NewConfig(fileName string) (config *Config, err error) {
 	}
 }
 
-func IsValidModule(moduleName string) bool {
-	validModules := []string{"supervisor", "watcher", "logger"}
-	for _, module := range validModules {
-		if moduleName == module {
-			return true
+func (config *Config) GetModuleConfig(moduleName string) (configEntries []ConfigEntry, err error) {
+	for _, config := range config.parsedConfig {
+		if config.moduleName == moduleName {
+			return config.values, nil
 		}
 	}
-	return false
-}
-
-func (config Config) ModuleConfig(moduleName string) *ModuleConfig {
-	for _, module := range config.parsedConfig {
-		if module.moduleName == moduleName {
-			return &module
-		}
-	}
-	return nil
+	return nil, errors.New("Empty module config")
 }
 
 func LoadConfig(filePath string) (moduleConfig []ModuleConfig, err error) {
@@ -91,4 +82,14 @@ func LoadConfig(filePath string) (moduleConfig []ModuleConfig, err error) {
 	}
 	log.Printf("Parsed config from file %s\n", modulesConfigSlice)
 	return modulesConfigSlice, nil
+}
+
+func IsValidModule(moduleName string) bool {
+	validModules := []string{"supervisor", "watcher", "logger"}
+	for _, module := range validModules {
+		if moduleName == module {
+			return true
+		}
+	}
+	return false
 }

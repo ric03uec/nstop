@@ -4,6 +4,7 @@ import (
 	"log"
 	"github.com/codegangsta/cli"
 	"github.com/ric03uec/nstop/arguments"
+	"github.com/ric03uec/nstop/supervisor"
 )
 
 var NSTOP_CONFIG_FILENAME = ".nstopcfg.json"
@@ -14,7 +15,16 @@ func bootApplication(c *cli.Context) {
 	if c.IsSet("file"){
 		fileName = c.GlobalString("file")
 	}
-	arguments.Initialize(fileName)
+	config := arguments.Initialize(fileName)
+	started, err := supervisor.Boot(config)
+	if err == nil && started == true {
+		log.Printf("Supervisor started successfully... ")
+	} else {
+		log.Printf("Error while booting logger: %v", err)
+		os.Exit(1)
+	}
+	//logger.boot
+	//watcher.boot
 }
 
 func main() {

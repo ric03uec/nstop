@@ -2,7 +2,7 @@
   "supervisor":{
     "exec" : "node app.js",
     "retryCount": 5,
-    "numprocs" : 3
+    "numProcs" : 3
   },
   "logger":{
     "enabled" : "true",
