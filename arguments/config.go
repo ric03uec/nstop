@@ -14,8 +14,8 @@ type Config struct {
 }
 
 type ModuleConfig struct {
-	moduleName string
-	values []ConfigEntry
+	ModuleName string
+	Values []ConfigEntry
 }
 
 type ConfigEntry struct {
@@ -32,8 +32,8 @@ func NewConfigEntry(key string, value interface{}) *ConfigEntry {
 
 func NewModuleConfig(moduleName string) *ModuleConfig {
 	moduleConfig := new(ModuleConfig)
-	moduleConfig.moduleName = moduleName
-	moduleConfig.values = []ConfigEntry{}
+	moduleConfig.ModuleName = moduleName
+	moduleConfig.Values = []ConfigEntry{}
 	return moduleConfig
 }
 
@@ -49,13 +49,24 @@ func NewConfig(fileName string) (config *Config, err error) {
 	}
 }
 
-func (config *Config) GetModuleConfig(moduleName string) (configEntries []ConfigEntry, err error) {
+func (config *Config) GetModuleConfig(moduleName string) (moduleConfig ModuleConfig, err error) {
 	for _, config := range config.parsedConfig {
-		if config.moduleName == moduleName {
-			return config.values, nil
+		if config.ModuleName == moduleName {
+			return config, nil
 		}
 	}
-	return nil, errors.New("Empty module config")
+	newConfig := NewModuleConfig(moduleName)
+	return *newConfig, errors.New(fmt.Sprintf("Empty module config : %s", moduleName))
+}
+
+func (moduleConfig *ModuleConfig) GetConfigValue(key string) (configEntry ConfigEntry, err error){
+	for _, moduleConfigEntry := range moduleConfig.Values {
+		if moduleConfigEntry.Key == key {
+			return moduleConfigEntry, nil
+		}
+	}
+	newConfigEntry := NewConfigEntry("nil", nil)
+	return *newConfigEntry, errors.New(fmt.Sprintf("Key %s not present in module config : %s", key, moduleConfig.ModuleName))
 }
 
 func LoadConfig(filePath string) (moduleConfig []ModuleConfig, err error) {
@@ -75,7 +86,7 @@ func LoadConfig(filePath string) (moduleConfig []ModuleConfig, err error) {
 			parsedModuleConfig := value.(map[string]interface{})
 			for moduleKey, moduleVal := range parsedModuleConfig {
 				configEntry := NewConfigEntry(moduleKey, moduleVal)
-				moduleConfig.values = append(moduleConfig.values, *configEntry)
+				moduleConfig.Values = append(moduleConfig.Values, *configEntry)
 			}
 			modulesConfigSlice = append(modulesConfigSlice, *moduleConfig)
 		}

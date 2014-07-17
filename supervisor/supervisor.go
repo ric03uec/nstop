@@ -26,35 +26,36 @@ func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err er
 	isValid = true
 	var validationError error
 	for _, configEntry := range configEntries {
-		fmt.Printf("-------------------------\n")
-		fmt.Printf("%v\n",configEntry.Key)
-		fmt.Printf("%v\n",VALID_PARAMS[configEntry.Key])
 		if isValidParamName(configEntry.Key) == true {
 			if VALID_PARAMS[configEntry.Key] == true && configEntry.Value == nil {
 				isValid = false
-				validationError = errors.New("Mandatory parameter not present")
+				validationError = errors.New(fmt.Sprintf("Mandatory parameter not present: %s\n", configEntry.Key))
 				break
 			}
 		} else {
 			isValid = false
-			validationError = errors.New("Incorrect Key in params")
+			validationError = errors.New(fmt.Sprintf("Invalid Key in params: %s\n", configEntry.Key))
 			break
 		}
-
 	}
 	fmt.Printf("%s\n",isValid)
 	return isValid, validationError
 }
 
+
 func Boot(config *arguments.Config)(started bool, err error) {
 	log.Printf("%v", config)
 	supervisorConfig, err := config.GetModuleConfig("supervisor")
 	log.Printf("%v --- %v", supervisorConfig, err)
-	if isValidConfig, err := validateConfig(supervisorConfig); isValidConfig == false{
-		log.Printf("Invalid Configuration file")
+	if isValidConfig, err := validateConfig(supervisorConfig.Values); isValidConfig == false{
+		log.Printf("Invalid configuation in config file")
 		return false, err
 	}
 	//exec command
+	configEntry, _ := supervisorConfig.GetConfigValue("exec")
+	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
+	proc.exec()
+	log.Printf(fmt.Sprintf("%v", proc))
 
 	return true, nil
 }
