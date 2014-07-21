@@ -1,6 +1,6 @@
 {
   "supervisor":{
-    "exec" : "node app.js",
+    "exec" : "./test.sh",
     "retryCount": 5,
     "numProcs" : 3
   },

@@ -44,14 +44,13 @@ func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err er
 func Boot(config *arguments.Config)(started bool, err error) {
 	log.Printf("%v", config)
 	supervisorConfig, err := config.GetModuleConfig("supervisor")
-	log.Printf("%v --- %v", supervisorConfig, err)
 	if isValidConfig, err := validateConfig(supervisorConfig.Values); isValidConfig == false{
 		log.Printf("Invalid configuation in config file")
 		return false, err
 	}
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
-	proc.exec()
+	proc.Start()
 	log.Printf(fmt.Sprintf("%v", proc))
 
 	return true, nil
