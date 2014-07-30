@@ -4,7 +4,6 @@ import (
 	"time"
 	"fmt"
 	"syscall"
-	//"bytes"
 	"log"
 	"os"
 	"strings"
@@ -24,6 +23,7 @@ type Proc struct {
 	waitTime uint16 //seconds
 	procError string
 }
+//http://stackoverflow.com/questions/18106749/golang-catch-signals
 
 func NewProc(command string) *Proc {
 	proc := new(Proc)
@@ -37,13 +37,6 @@ func NewProc(command string) *Proc {
 	return proc
 }
 
-func (proc *Proc) AddHandlers() {
-	// add handlers for 
-	// kill (kill everything)
-	// term/int (gracefully kill)
-	// usr/usr2 (restart, reload files)
-}
-
 func (proc *Proc) String() string {
 	if proc.running == true {
 		return fmt.Sprintf("Command: %s, Running: %t, Restart count: %d",
@@ -54,30 +47,26 @@ func (proc *Proc) String() string {
 	}
 }
 
-func (proc *Proc) Stop() (safeStop bool, err error) {
-	fmt.Printf("supervisor killing child process\n")
-	proc.cmd.Process.Signal(syscall.SIGKILL)
-	close(proc.signalChannel)
+func (proc *Proc) Stop(sig os.Signal) (safeStop bool, err error) {
+	fmt.Printf("supervisor killing child process with signal: %s\n", sig)
+	proc.cmd.Process.Signal(sig)
+	signal.Stop(proc.signalChannel)
 	return true, nil
 }
 
 func (proc *Proc) AddSignalHandlers() {
 	proc.signalChannel = make(chan os.Signal, 1)
-	signal.Notify(proc.signalChannel, os.Interrupt)
-	//signal.Notify(proc.signalChannel)
-	go func(){
-		for sig := range proc.signalChannel {
-			fmt.Printf("received signal at handler \n")
-			fmt.Printf("%s", sig)
-			proc.Stop()
-			//proc.Stop(), if signal = int or stop
-			//proc.ReloadChildConfig(), if signal=usr1
-		}
-	}()
+	signal.Notify(proc.signalChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+	go proc.StartSignalListener()
 }
 
-func (proc *Proc) RemoveSignalHandlers() {
-
+func (proc *Proc) StartSignalListener() {
+	// filter signals for handling proc
+	// usr/usr2 (restart, reload files)
+	for sig := range proc.signalChannel {
+		fmt.Printf("received signal at handler: %s\n", sig)
+		proc.Stop(sig)
+	}
 }
 
 func (proc *Proc) Start() (safeExit bool, err error) {
@@ -87,7 +76,7 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 	commandArgs := commandParts[1:len(commandParts)]
 	proc.cmd = exec.Command(commandString, commandArgs...)
 
-	//store these in logs
+	//store these in logs also
 	proc.cmd.Stdout = os.Stdout
 	proc.cmd.Stderr = os.Stderr
 
@@ -106,7 +95,7 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 	select {
 		case <- time.After(1200 * time.Second):
 			fmt.Printf("killing process\n")
-			proc.Stop()
+			proc.Stop(os.Interrupt)
 			<-done
 		case exitCode := <-done:
 			if exitCode != nil {
