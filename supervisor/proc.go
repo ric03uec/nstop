@@ -23,7 +23,6 @@ type Proc struct {
 	waitTime uint16 //seconds
 	procError string
 }
-//http://stackoverflow.com/questions/18106749/golang-catch-signals
 
 func NewProc(command string) *Proc {
 	proc := new(Proc)
@@ -70,19 +69,18 @@ func (proc *Proc) StartSignalListener() {
 }
 
 func (proc *Proc) Start() (safeExit bool, err error) {
-	log.Printf("supervisor proc running command: %s\n", proc.command)
+	log.Printf("supervisor running command: %s\n", proc.command)
 	commandParts := strings.Fields(proc.command)
 	commandString := commandParts[0]
 	commandArgs := commandParts[1:len(commandParts)]
+
 	proc.cmd = exec.Command(commandString, commandArgs...)
 
-	//store these in logs also
 	proc.cmd.Stdout = os.Stdout
 	proc.cmd.Stderr = os.Stderr
 
-	log.Printf("--------- Starting command execution ----------- \n")
-	cmdErr := proc.cmd.Start()
 	proc.AddSignalHandlers()
+	cmdErr := proc.cmd.Start()
 	if cmdErr != nil {
 		log.Fatal(cmdErr)
 	}
