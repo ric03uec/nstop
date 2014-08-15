@@ -13,6 +13,21 @@ var VALID_PARAMS = map[string]bool{
 	"numProcs"	: false,
 }
 
+var PARAM_DEFAULT = map[string]interface{}{
+	"retryCount"	: 3,
+	"minWait"	: 5,
+	"numProcs"	: 1,
+}
+
+func getDefaultConfig(exec string) *arguments.ModuleConfig {
+	defaultConfig := arguments.NewModuleConfig("supervisor")
+	configExecEntry := arguments.NewConfigEntry("exec", exec)
+	defaultConfig.Values = append(defaultConfig.Values, *configExecEntry)
+	fmt.Printf("blahblah\n")
+
+	return defaultConfig
+}
+
 func isValidParamName(paramName string) bool {
 	for key ,_ := range VALID_PARAMS {
 		if paramName == key {
