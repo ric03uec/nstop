@@ -3,12 +3,14 @@ package supervisor
 import (
 	"testing"
 	"fmt"
+	"github.com/ric03uec/nstop/arguments"
 )
 
 func TestDefaultExec(t *testing.T) {
 	// tests whether the default config has the correct command or not
 	exec_cmd := "node app.js"
-	supervisorConfig := GetDefaultConfig(exec_cmd)
+	defaultConfig := GetDefaultConfig(exec_cmd)
+	supervisorConfig, _ := arguments.GetModuleConfig(defaultConfig, "supervisor")
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 
 	if configEntry.Value == exec_cmd {
@@ -21,7 +23,8 @@ func TestDefaultExec(t *testing.T) {
 func TestDefaultParamsCount(t *testing.T) {
 	// test whether the default config has correct number of parameters
 	exec_cmd := "node app.js"
-	supervisorConfig := GetDefaultConfig(exec_cmd)
+	defaultConfig := GetDefaultConfig(exec_cmd)
+	supervisorConfig, _ := arguments.GetModuleConfig(defaultConfig, "supervisor")
 
 	configParamsCount := len(supervisorConfig.Values)
 	validParamsCount := len(VALID_PARAMS)
