@@ -3,6 +3,7 @@ import (
 	"os"
 	"log"
 	"fmt"
+	"strings"
 	"github.com/codegangsta/cli"
 	"github.com/ric03uec/nstop/arguments"
 	"github.com/ric03uec/nstop/supervisor"
@@ -16,16 +17,14 @@ func bootApplication(c *cli.Context) {
 	log.Printf("Booting application")
 	fileName := NSTOP_CONFIG_FILENAME
 	var started bool
-	var config *arguments.Config
+	var config []arguments.ModuleConfig
 	if c.IsSet("file"){
 		fileName = c.GlobalString("file")
 		config = arguments.Initialize(fileName)
 	} else if len(c.Args()) > 0 {
-		command_name := c.Args()[0]
-		//TODO: get everything in the array and not just the first word, command
-		// can be nstop node app.js -blah -blu -ble
-		fmt.Printf("Booting application %s \n", command_name)
-		//started, err := supervisor.Boot(config)
+		exec_cmd := fmt.Sprintf("%s", strings.Join(c.Args(), " "))
+		config = supervisor.GetDefaultConfig(exec_cmd)
+		fmt.Printf("Booting application %s \n", exec_cmd)
 	}
 	started, err := supervisor.Boot(config)
 	if err == nil && started == true {

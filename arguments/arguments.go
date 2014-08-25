@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func Initialize(fileName string)(config *Config) {
+func Initialize(fileName string)([]ModuleConfig) {
 	//TODO: provide full path to the fiLe, easier for debuggin
 	log.Printf("Reading configuration from file : %s\n", fileName)
 	readConfig, err := NewConfig(fileName)
@@ -12,5 +12,5 @@ func Initialize(fileName string)(config *Config) {
 		log.Printf("Could not initialize configuration, exiting...")
 		os.Exit(1)
 	}
-	return readConfig
+	return readConfig.parsedConfig
 }

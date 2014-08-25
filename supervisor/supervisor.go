@@ -19,13 +19,26 @@ var PARAM_DEFAULT = map[string]interface{}{
 	"numProcs"	: 1,
 }
 
-func getDefaultConfig(exec string) *arguments.ModuleConfig {
+func GetDefaultConfig(exec string) []arguments.ModuleConfig {
+	modulesConfigSlice := []arguments.ModuleConfig{}
+
+	// adding default supervisor config
 	defaultConfig := arguments.NewModuleConfig("supervisor")
 	configExecEntry := arguments.NewConfigEntry("exec", exec)
 	defaultConfig.Values = append(defaultConfig.Values, *configExecEntry)
-	fmt.Printf("blahblah\n")
+	for key, _:= range VALID_PARAMS {
+		if key == "exec" {
+			continue
+		}
+		configValue := PARAM_DEFAULT[key]
+		configEntry := arguments.NewConfigEntry(key, configValue)
+		defaultConfig.Values = append(defaultConfig.Values, *configEntry)
+	}
 
-	return defaultConfig
+	//TODO: add default watcher/logger config
+	modulesConfigSlice = append(modulesConfigSlice, *defaultConfig)
+
+	return modulesConfigSlice
 }
 
 func isValidParamName(paramName string) bool {
@@ -56,9 +69,9 @@ func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err er
 	return isValid, validationError
 }
 
-func Boot(config *arguments.Config)(started bool, err error) {
+func Boot(config []arguments.ModuleConfig)(started bool, err error) {
 	log.Printf("%v", config)
-	supervisorConfig, err := config.GetModuleConfig("supervisor")
+	supervisorConfig, err := arguments.GetModuleConfig(config, "supervisor")
 	if isValidConfig, err := validateConfig(supervisorConfig.Values); isValidConfig == false{
 		log.Printf("Invalid configuation in config file")
 		return false, err

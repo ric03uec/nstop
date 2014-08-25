@@ -49,10 +49,10 @@ func NewConfig(fileName string) (config *Config, err error) {
 	}
 }
 
-func (config *Config) GetModuleConfig(moduleName string) (moduleConfig ModuleConfig, err error) {
-	for _, config := range config.parsedConfig {
-		if config.ModuleName == moduleName {
-			return config, nil
+func GetModuleConfig(modulesConfig []ModuleConfig, moduleName string) (moduleConfig ModuleConfig, err error) {
+	for _, moduleConfig := range modulesConfig {
+		if moduleConfig.ModuleName == moduleName {
+			return moduleConfig, nil
 		}
 	}
 	newConfig := NewModuleConfig(moduleName)
