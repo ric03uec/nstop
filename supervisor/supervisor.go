@@ -8,13 +8,13 @@ import (
 
 var VALID_PARAMS = map[string]bool{
 	"exec"		: true,
-	"retryCount"	: true,
+	"restartCount"	: true,
 	"minWait"	: false,
 	"numProcs"	: false,
 }
 
 var PARAM_DEFAULT = map[string]interface{}{
-	"retryCount"	: 3,
+	"restartCount"	: 3,
 	"minWait"	: 5,
 	"numProcs"	: 1,
 }

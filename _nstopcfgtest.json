@@ -1,7 +1,7 @@
 {
   "supervisor":{
     "exec" : "./test.sh",
-    "retryCount": 5,
+    "restartCount": 5,
     "numProcs" : 3
   },
   "logger":{
