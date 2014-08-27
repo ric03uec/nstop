@@ -89,6 +89,7 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 		done <- proc.cmd.Wait()
 	}()
 
+	//process waits here
 	exitCode := <-done
 	if exitCode != nil {
 		// Type Assertion of exitCode with exec.ExitError struct
@@ -117,7 +118,10 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 			}
 		}
 	} else {
+		// command exited successfully with return code = 0
 		proc.exitCode = 0
+		proc.restartCount += 1
+		proc.Start()
 	}
 	return true, nil
 }
