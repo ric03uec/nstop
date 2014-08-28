@@ -1,7 +1,6 @@
 package supervisor
 
 import (
-	"time"
 	"fmt"
 	"syscall"
 	"log"
@@ -15,7 +14,7 @@ type Proc struct {
 	cmd *exec.Cmd
 	signalChannel chan os.Signal
 	command string
-	exitCode int16
+	exitCode int
 	running bool
 	restartCount uint16
 	maxRestartCount uint16
@@ -63,8 +62,8 @@ func (proc *Proc) StartSignalListener() {
 	// filter signals for handling proc
 	// usr/usr2 (restart, reload files)
 	for sig := range proc.signalChannel {
-		fmt.Printf("received signal at handler: %s\n", sig)
-		proc.Stop(sig)
+		fmt.Printf("received signal at handler: %s, sending SIGKILL to process\n", sig)
+		proc.Stop(syscall.SIGKILL)
 	}
 }
 
@@ -86,24 +85,43 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 	}
 
 	done := make(chan error, 1)
-	go func() {
+	go func(){
 		done <- proc.cmd.Wait()
 	}()
 
-	select {
-		case <- time.After(1200 * time.Second):
-			fmt.Printf("killing process\n")
-			proc.Stop(os.Interrupt)
-			<-done
-		case exitCode := <-done:
-			if exitCode != nil {
-				proc.exitCode = -1
+	//process waits here
+	exitCode := <-done
+	if exitCode != nil {
+		// Type Assertion of exitCode with exec.ExitError struct
+		var waitStatus syscall.WaitStatus
+		exitError, ok := exitCode.(*exec.ExitError);
+		if ok {
+			// exitError.Sys() returns system specific exit info
+			// Type Assertion of exitError.Sys() to sysCall.Waitstatus for Unix
+			waitStatus = exitError.Sys().(syscall.WaitStatus)
+			exitStatus := waitStatus.ExitStatus()
+			if exitStatus == 130 {
+				log.Printf("Process killed manually, aborting restart \n")
+				return true, nil
+			} else {
+				proc.exitCode = exitStatus
 				proc.procError = fmt.Sprintf("%v", exitCode)
 				log.Printf("%v", proc.procError)
-			} else {
-				proc.exitCode = 0
+				if(proc.restartCount < proc.maxRestartCount){
+					log.Printf("Restarting app, Restart count %d, Max restart count %d", proc.restartCount, proc.maxRestartCount)
+					proc.restartCount += 1;
+					proc.Start()
+				}else{
+					log.Printf("Max restart count (%d) reached, exiting", proc.maxRestartCount)
+					log.Printf("--------- Command exited ----------- \n")
+				}
 			}
-			log.Printf("--------- Command exited ----------- \n")
+		}
+	} else {
+		// command exited successfully with return code = 0
+		proc.exitCode = 0
+		proc.restartCount += 1
+		proc.Start()
 	}
 	return true, nil
 }

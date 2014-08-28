@@ -8,13 +8,13 @@ import (
 
 var VALID_PARAMS = map[string]bool{
 	"exec"		: true,
-	"retryCount"	: true,
+	"restartCount"	: true,
 	"minWait"	: false,
 	"numProcs"	: false,
 }
 
 var PARAM_DEFAULT = map[string]interface{}{
-	"retryCount"	: 3,
+	"restartCount"	: 3,
 	"minWait"	: 5,
 	"numProcs"	: 1,
 }
@@ -78,8 +78,12 @@ func Boot(config []arguments.ModuleConfig)(started bool, err error) {
 	}
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
-	proc.Start()
-	log.Printf(fmt.Sprintf("%v", proc))
-
-	return true, nil
+	safeExit, procErr := proc.Start()
+	if procErr == nil && safeExit == true {
+		log.Printf(fmt.Sprintf("%v", proc))
+		return true, nil
+	} else {
+		log.Printf(fmt.Sprintf("Error while starting command"))
+		return safeExit, procErr
+	}
 }
