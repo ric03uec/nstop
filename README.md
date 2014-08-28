@@ -1,14 +1,29 @@
-nstop
+nstop or (!stop)
 =====
 
 docker container process manager
 
-WIP:
-=====
+Why build another supervisor?
+=============================
 
+Mostly to solve the problem's we have been facing in managing our docker-ized applications like
 
-- create arguments parser
-- test cases for parser
-- validate supervisor config in supervisor  module
-- kill the child with SIGKILL to restart
-- use libinotify to watch for file changes (watcher module)
+- restarting the apps upon crash  
+- not being able to force restart an application 
+- auto-restarting application upon file changes 
+- not being able to handle logs 
+- other solutions like node-supervisor, supervisord, forever etc had one or more shortcomings
+
+How nstop is different?
+=============================
+
+- built from ground up to address only containerized app specific issues
+- one stop solution for all container specific needs like process manager, file watcher, log rotate
+- different from phusion/baseimage because baseimage solves the problem of running multiple processes inside a container and basically make it
+easier to treat a container like a VM whereas nstop sticks to docker philosophy of having one application per container
+
+Want to contribue?
+============================
+
+Just open an issue and lets get going :)  
+
