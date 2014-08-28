@@ -16,7 +16,6 @@ func bootApplication(c *cli.Context) {
 	// else no config provided, use default
 	log.Printf("Booting application")
 	fileName := NSTOP_CONFIG_FILENAME
-	var started bool
 	var config []arguments.ModuleConfig
 	if c.IsSet("file"){
 		fileName = c.GlobalString("file")
@@ -26,11 +25,11 @@ func bootApplication(c *cli.Context) {
 		config = supervisor.GetDefaultConfig(exec_cmd)
 		fmt.Printf("Booting application %s \n", exec_cmd)
 	}
-	started, err := supervisor.Boot(config)
-	if err == nil && started == true {
-		log.Printf("Supervisor started successfully... ")
+	safeExit, err := supervisor.Boot(config)
+	if err == nil && safeExit == true {
+		log.Printf("Supervisor exited successfully... ")
 	} else {
-		log.Printf("Error while booting logger: %v", err)
+		log.Printf("Error while booting supervisor : %v", err)
 		os.Exit(1)
 	}
 	//logger.boot
@@ -39,8 +38,6 @@ func bootApplication(c *cli.Context) {
 
 func main() {
 	// use go-flags or getopt package for parsing flags
-	// use channels
-	// DONT pass arrays, pass slices
 	app := cli.NewApp()
 	app.Name = "!stop"
 	app.Usage = "supervisor for docker applications"

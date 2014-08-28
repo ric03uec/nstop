@@ -78,8 +78,12 @@ func Boot(config []arguments.ModuleConfig)(started bool, err error) {
 	}
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
-	proc.Start()
-	log.Printf(fmt.Sprintf("%v", proc))
-
-	return true, nil
+	safeExit, procErr := proc.Start()
+	if procErr == nil && safeExit == true {
+		log.Printf(fmt.Sprintf("%v", proc))
+		return true, nil
+	} else {
+		log.Printf(fmt.Sprintf("Error while starting command"))
+		return safeExit, procErr
+	}
 }
