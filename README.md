@@ -1,6 +1,8 @@
 nstop or (!stop)
 =====
 
+[![Build Status](https://api.shippable.com/projects/540efe883479c5ea8f9f2b21/badge?branchName=master)](https://app.shippable.com/projects/540efe883479c5ea8f9f2b21/builds/latest)
+
 docker container process manager
 
 Why build another supervisor?
