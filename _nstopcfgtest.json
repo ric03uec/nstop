@@ -9,7 +9,8 @@
     "dirname" : "."
   },
   "watcher":{
-    "enabled" : false
+    "enabled" : false,
+    "ignorePattern", ["*.swp", "*.swo"]
   },
   "invalidModule" : {
     "enabled" : true

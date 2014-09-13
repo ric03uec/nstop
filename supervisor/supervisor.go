@@ -6,43 +6,60 @@ import (
 	"github.com/ric03uec/nstop/arguments"
 )
 
-var VALID_PARAMS = map[string]bool{
+var VALID_PARAMS_SUPERVISOR = map[string]bool{
 	"exec"		: true,
 	"restartCount"	: true,
 	"minWait"	: false,
 	"numProcs"	: false,
 }
 
-var PARAM_DEFAULT = map[string]interface{}{
+var PARAM_DEFAULT_SUPERVISOR = map[string]interface{}{
 	"restartCount"	: 3,
 	"minWait"	: 5,
 	"numProcs"	: 1,
+}
+
+var VALID_PARAMS_WATCHER = map[string]bool{
+	"enabled"	: true,
+	"ignorePattern"	: false,
+}
+
+var PARAM_DEFAULT_WATCHER = map[string]interface{}{
+	"enabled"	: true,
+	"ignorePattern"	: []string{},
 }
 
 func GetDefaultConfig(exec string) []arguments.ModuleConfig {
 	modulesConfigSlice := []arguments.ModuleConfig{}
 
 	// adding default supervisor config
-	defaultConfig := arguments.NewModuleConfig("supervisor")
+	defaultSupervisorConfig := arguments.NewModuleConfig("supervisor")
 	configExecEntry := arguments.NewConfigEntry("exec", exec)
-	defaultConfig.Values = append(defaultConfig.Values, *configExecEntry)
-	for key, _:= range VALID_PARAMS {
+	defaultSupervisorConfig.Values = append(defaultSupervisorConfig.Values, *configExecEntry)
+	for key, _:= range VALID_PARAMS_SUPERVISOR {
 		if key == "exec" {
 			continue
 		}
-		configValue := PARAM_DEFAULT[key]
+		configValue := PARAM_DEFAULT_SUPERVISOR[key]
 		configEntry := arguments.NewConfigEntry(key, configValue)
-		defaultConfig.Values = append(defaultConfig.Values, *configEntry)
+		defaultSupervisorConfig.Values = append(defaultSupervisorConfig.Values, *configEntry)
 	}
 
-	//TODO: add default watcher/logger config
-	modulesConfigSlice = append(modulesConfigSlice, *defaultConfig)
+	defaultWatcherConfig := arguments.NewModuleConfig("watcher")
+	for key, _:= range VALID_PARAMS_WATCHER {
+		configValue := PARAM_DEFAULT_WATCHER[key]
+		configEntry := arguments.NewConfigEntry(key, configValue)
+		defaultWatcherConfig.Values = append(defaultWatcherConfig.Values, *configEntry)
+	}
+
+	modulesConfigSlice = append(modulesConfigSlice, *defaultSupervisorConfig)
+	modulesConfigSlice = append(modulesConfigSlice, *defaultWatcherConfig)
 
 	return modulesConfigSlice
 }
 
-func isValidParamName(paramName string) bool {
-	for key ,_ := range VALID_PARAMS {
+func isValidParamName(validParamMap map[string]bool, paramName string) bool {
+	for key ,_ := range validParamMap {
 		if paramName == key {
 			return true
 		}
@@ -50,12 +67,13 @@ func isValidParamName(paramName string) bool {
 	return false
 }
 
-func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err error) {
+func validateConfig(validParamMap map[string]bool, configEntries []arguments.ConfigEntry) (isValid bool, err error) {
 	isValid = true
 	var validationError error
 	for _, configEntry := range configEntries {
-		if isValidParamName(configEntry.Key) == true {
-			if VALID_PARAMS[configEntry.Key] == true && configEntry.Value == nil {
+		fmt.Sprintf("%v", validParamMap)
+		if isValidParamName(validParamMap, configEntry.Key) == true {
+			if validParamMap[configEntry.Key] == true && configEntry.Value == nil {
 				isValid = false
 				validationError = errors.New(fmt.Sprintf("Mandatory parameter not present: %s\n", configEntry.Key))
 				break
@@ -69,15 +87,27 @@ func validateConfig(configEntries []arguments.ConfigEntry) (isValid bool, err er
 	return isValid, validationError
 }
 
+// this will import the watcher config 
+// proc will do the file watching and take decision based on whether the file has changed or notj
 func Boot(config []arguments.ModuleConfig)(started bool, err error) {
 	log.Printf("%v", config)
 	supervisorConfig, err := arguments.GetModuleConfig(config, "supervisor")
-	if isValidConfig, err := validateConfig(supervisorConfig.Values); isValidConfig == false{
-		log.Printf("Invalid configuation in config file")
+	watcherConfig, err := arguments.GetModuleConfig(config, "watcher")
+
+	if isValidConfig, err := validateConfig(VALID_PARAMS_SUPERVISOR, supervisorConfig.Values); isValidConfig == false{
+		log.Printf("Invalid supervisor config")
 		return false, err
 	}
 	configEntry, _ := supervisorConfig.GetConfigValue("exec")
 	proc := NewProc(fmt.Sprintf("%s", configEntry.Value))
+	proc.supervisorConfig = supervisorConfig
+
+	if isValidConfig, err := validateConfig(VALID_PARAMS_WATCHER, watcherConfig.Values); isValidConfig == false{
+		log.Printf("Invalid watcher config")
+		return false, err
+	}
+	proc.watcherConfig = watcherConfig
+
 	safeExit, procErr := proc.Start()
 	if procErr == nil && safeExit == true {
 		log.Printf(fmt.Sprintf("%v", proc))

@@ -12,8 +12,6 @@ import (
 var NSTOP_CONFIG_FILENAME = ".nstopcfg.json"
 
 func bootApplication(c *cli.Context) {
-	// if file option set, then use the filename to load the config
-	// else no config provided, use default
 	log.Printf("Booting application")
 	fileName := NSTOP_CONFIG_FILENAME
 	var config []arguments.ModuleConfig
@@ -32,8 +30,6 @@ func bootApplication(c *cli.Context) {
 		log.Printf("Error while booting supervisor : %v", err)
 		os.Exit(1)
 	}
-	//logger.boot
-	//watcher.boot
 }
 
 func main() {

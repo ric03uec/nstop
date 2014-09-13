@@ -8,6 +8,8 @@ import (
 	"strings"
 	"os/exec"
 	"os/signal"
+	"gopkg.in/fsnotify.v1"
+	"github.com/ric03uec/nstop/arguments"
 )
 
 type Proc struct {
@@ -21,6 +23,9 @@ type Proc struct {
 	shell string
 	waitTime uint16 //seconds
 	procError string
+	supervisorConfig arguments.ModuleConfig
+	watcherConfig arguments.ModuleConfig
+	watcher *fsnotify.Watcher
 }
 
 func NewProc(command string) *Proc {
@@ -49,6 +54,7 @@ func (proc *Proc) Stop(sig os.Signal) (safeStop bool, err error) {
 	fmt.Printf("supervisor killing child process with signal: %s\n", sig)
 	proc.cmd.Process.Signal(sig)
 	signal.Stop(proc.signalChannel)
+	proc.watcher.Close()
 	return true, nil
 }
 
@@ -65,6 +71,41 @@ func (proc *Proc) StartSignalListener() {
 		fmt.Printf("received signal at handler: %s, sending SIGKILL to process\n", sig)
 		proc.Stop(syscall.SIGKILL)
 	}
+}
+
+func (proc *Proc) InitWatcher() (success bool, err error) {
+	watcher, err := fsnotify.NewWatcher()
+
+	if err != nil {
+		log.Printf("Error while intializing watcher, exiting")
+		return false, err
+	}
+	proc.watcher = watcher
+
+	go func() {
+		for {
+			select {
+			case ev := <- proc.watcher.Events:
+				if ev.Op != 0 {
+					log.Println("File changed: ", ev.Name)
+					log.Println("OP: ", ev.Op)
+					//??? how to stop this
+					proc.Start()
+				}
+			case err := <- proc.watcher.Errors:
+				if err != nil {
+					log.Println("watcher err: ", err)
+				}
+			}
+		}
+	}()
+
+	err = proc.watcher.Add(".")
+	if err != nil {
+		log.Printf("Error while watching directory")
+		return false, err
+	}
+	return true, nil
 }
 
 func (proc *Proc) Start() (safeExit bool, err error) {
@@ -89,6 +130,8 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 		done <- proc.cmd.Wait()
 	}()
 
+	// add the watcher here
+	proc.InitWatcher()
 	//process waits here
 	exitCode := <-done
 	if exitCode != nil {
@@ -100,8 +143,10 @@ func (proc *Proc) Start() (safeExit bool, err error) {
 			// Type Assertion of exitError.Sys() to sysCall.Waitstatus for Unix
 			waitStatus = exitError.Sys().(syscall.WaitStatus)
 			exitStatus := waitStatus.ExitStatus()
-			if exitStatus == 130 {
+			log.Printf(fmt.Sprintf("%v", waitStatus))
+			if exitStatus == -1 {
 				log.Printf("Process killed manually, aborting restart \n")
+				proc.Stop(syscall.SIGKILL)
 				return true, nil
 			} else {
 				proc.exitCode = exitStatus
