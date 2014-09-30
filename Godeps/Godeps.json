@@ -1,0 +1,16 @@
+{
+	"ImportPath": "github.com/ric03uec/nstop",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.0.0-43-g3fa24ca",
+			"Rev": "3fa24ca4f3284911d9cac655d06b1d548653c180"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Comment": "v1.0.4",
+			"Rev": "ca50e738d35a862c379baf8fffbc3bfd080b3cff"
+		}
+	]
+}
